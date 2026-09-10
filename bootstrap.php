@@ -39,6 +39,25 @@ function buildPlan(array $current, string $operator): array
     return $next;
 }
 
+function requireRoot(?callable $probe = null): void
+{
+    // PHP POSIX is optional on OPNsense. id(1) reports the effective UID.
+    if ($probe === null) {
+        $probe = static function (): array {
+            $lines = [];
+            exec('/usr/bin/id -u', $lines, $status);
+            return [$status, $lines];
+        };
+    }
+    [$status, $lines] = $probe();
+    if ($status !== 0 || count($lines) !== 1 || preg_match('/^[0-9]+$/D', trim($lines[0])) !== 1) {
+        throw new RuntimeException('Cannot determine effective UID using /usr/bin/id -u.');
+    }
+    if (trim($lines[0]) !== '0') {
+        throw new RuntimeException('Run as root from the provider console.');
+    }
+}
+
 function runCommand(string $command): void
 {
     passthru($command, $status);
@@ -71,9 +90,7 @@ function main(array $args): int
     if (PHP_OS_FAMILY !== 'BSD' || !is_file('/usr/local/etc/inc/config.inc') || !is_file('/conf/config.xml')) {
         throw new RuntimeException('Run only on an installed OPNsense router.');
     }
-    if (!function_exists('posix_geteuid') || posix_geteuid() !== 0) {
-        throw new RuntimeException('Run as root from the provider console.');
-    }
+    requireRoot();
     global $config;
     $originalHash = hash_file('sha256', '/conf/config.xml');
     require_once('/usr/local/etc/inc/util.inc');

@@ -110,10 +110,10 @@ administrative path.
 
 ## Validation scope
 
-PHP 8.3 syntax check and 20 configuration-plan assertions passed locally in a
+PHP 8.3 syntax check and 25 configuration and privilege assertions passed locally in a
 network-disabled, read-only test container. Tests cover preserved data, operator
 restriction, invalid input, missing WAN, idempotence, and operator replacement.
-Linux execution is rejected. The actual OPNsense save/reload/start and external
+Linux execution is rejected. The root check uses system id(1), avoiding the optional PHP POSIX extension; tests also run with posix_geteuid disabled. The actual OPNsense save/reload/start and external
 SSH/HTTPS authentication still need live acceptance by the operator.
 
 Sources: [OPNsense 25.7 SSH settings](https://github.com/opnsense/core/blob/stable/25.7/src/etc/inc/plugins.inc.d/openssh.inc),

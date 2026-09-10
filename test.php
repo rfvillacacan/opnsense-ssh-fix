@@ -36,3 +36,11 @@ $rejected = false;
 try { buildPlan([], '192.0.2.10'); } catch (RuntimeException $e) { $rejected = true; }
 check($rejected, 'Reject missing WAN');
 check($original['system']['ssh']['port'] === '2222', 'Plan does not mutate input');
+
+requireRoot();
+check(true, 'Root check works with PHP POSIX unavailable');
+foreach ([[0, ['1000']], [1, []], [0, ['not-a-uid']], [0, []]] as $result) {
+    $rejected = false;
+    try { requireRoot(static fn() => $result); } catch (RuntimeException $e) { $rejected = true; }
+    check($rejected, 'Reject nonroot or invalid UID probe');
+}
